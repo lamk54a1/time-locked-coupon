@@ -4,7 +4,7 @@
 
 **Network:** devnet
 
-**Package ID:**0x8659089ee35fa406d8345a34845d0ac6535df566592fd4bc15ea384dd6329f19
+**Package ID:** 0x8659089ee35fa406d8345a34845d0ac6535df566592fd4bc15ea384dd6329f19
 
 **Explorer:** https://explorer.iota.org/object/0x8659089ee35fa406d8345a34845d0ac6535df566592fd4bc15ea384dd6329f19?network=devnet
 
