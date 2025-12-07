@@ -1,65 +1,166 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState } from "react";
+import { Container, Heading, Text, Button, TextField } from "@radix-ui/themes";
+import ClipLoader from "react-spinners/ClipLoader";
+import { useCoupons } from "@/hooks/useCoupons";
+
+export default function HomePage() {
+  const {
+    account,
+    isLoading,
+    txHash,
+    error,
+    lastCouponId,
+    mintCoupon,
+    redeemCoupon,
+  } = useCoupons();
+
+  const [minutes, setMinutes] = useState("1");
+  const [couponIdInput, setCouponIdInput] = useState("");
+
+  const handleMint = async () => {
+    const mins = Number(minutes);
+    if (Number.isNaN(mins) || mins <= 0) return;
+
+    const unlockTime = Date.now() + mins * 60 * 1000;
+    await mintCoupon(unlockTime);
+  };
+
+  const handleRedeem = async () => {
+    if (!couponIdInput) return;
+    await redeemCoupon(couponIdInput);
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <Container style={{ maxWidth: 700, marginTop: 60, marginBottom: 60 }}>
+      <Heading size="6" mb="5">
+        🎟️ Time-Locked Coupons DApp
+      </Heading>
+
+      {account ? (
+        <Text mb="4" size="2" style={{ fontFamily: "monospace" }}>
+          Connected wallet: {account.address}
+        </Text>
+      ) : (
+        <Text mb="4" color="red">
+          Please connect your IOTA wallet using the wallet UI to continue.
+        </Text>
+      )}
+
+      {/* Mint Coupon */}
+      <div
+        style={{
+          padding: 20,
+          borderRadius: 12,
+          background: "var(--gray-a3)",
+          marginBottom: 20,
+        }}
+      >
+        <Heading size="4" mb="2">
+          1️⃣ Mint Coupon
+        </Heading>
+
+        <Text mb="2">
+          Set how many minutes from now the coupon becomes redeemable:
+        </Text>
+
+        <TextField.Root
+          type="number"
+          value={minutes}
+          onChange={(e) => setMinutes(e.target.value)}
+          style={{ maxWidth: 120, marginBottom: 12 }}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+
+        <div>
+          <Button onClick={handleMint} disabled={isLoading || !account}>
+            {isLoading ? (
+              <>
+                <ClipLoader size={16} style={{ marginRight: 8 }} />
+                Minting...
+              </>
+            ) : (
+              "Mint Coupon"
+            )}
+          </Button>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {lastCouponId && (
+          <Text mt="3" size="2" style={{ display: "block", wordBreak: "break-all" }}>
+            ✅ Last minted coupon ID: {lastCouponId}
+          </Text>
+        )}
+      </div>
+
+      {/* Redeem Coupon */}
+      <div
+        style={{
+          padding: 20,
+          borderRadius: 12,
+          background: "var(--gray-a3)",
+          marginBottom: 20,
+        }}
+      >
+        <Heading size="4" mb="2">
+          2️⃣ Redeem Coupon
+        </Heading>
+
+        <Text mb="2">
+          Paste a coupon object ID to redeem it (after it is unlocked):
+        </Text>
+
+        <TextField.Root
+          placeholder="Paste Coupon ID here"
+          value={couponIdInput}
+          onChange={(e) => setCouponIdInput(e.target.value)}
+          style={{ marginBottom: 12 }}
+        />
+
+        <div>
+          <Button onClick={handleRedeem} disabled={isLoading || !account}>
+            {isLoading ? (
+              <>
+                <ClipLoader size={16} style={{ marginRight: 8 }} />
+                Redeeming...
+              </>
+            ) : (
+              "Redeem Coupon"
+            )}
+          </Button>
         </div>
-      </main>
-    </div>
+      </div>
+
+      {/* Transaction Info */}
+      {txHash && (
+        <div
+          style={{
+            padding: 16,
+            background: "var(--blue-a3)",
+            borderRadius: 8,
+            marginBottom: 12,
+          }}
+        >
+          <Text size="2" mb="1">
+            ✅ Transaction confirmed
+          </Text>
+          <Text size="1" style={{ fontFamily: "monospace", wordBreak: "break-all" }}>
+            {txHash}
+          </Text>
+        </div>
+      )}
+
+      {/* Error */}
+      {error && (
+        <div
+          style={{
+            padding: 16,
+            background: "var(--red-a3)",
+            borderRadius: 8,
+          }}
+        >
+          <Text color="red">{error.message}</Text>
+        </div>
+      )}
+    </Container>
   );
 }
